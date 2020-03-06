@@ -15,7 +15,7 @@ For this project, we analyzed movies released between 2010 and 2019. We got our 
 
 In this project we used the following libraries:
 
-	###Data Collection
+	### Data Collection
 	BeauitfulSoup
 	Request
 	Time
@@ -25,7 +25,7 @@ In this project we used the following libraries:
 	Json
 	Pandas
 
-	###Data Cleaning & Visualization
+	### Data Cleaning & Visualization
 	Pandas
 	Numpy
 	Matplotlib
