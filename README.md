@@ -1,9 +1,9 @@
-#Module 1 Final Project
+# Module 1 Final Project
 
 Gabriela Lopez & Maura Cerow 
 Sources: IMDB & Movie DB
 
-##Introduction
+## Introduction
 
 For this project, we analyzed movies released between 2010 and 2019. We got our data from IMDB, collecting 10,000 releases for this time period. By scraping IMDB we got the genre(s), MPAA rating, user star rating, title of each film as well as the IMDB Movie ID. With this ID, we then used the Movie DB’s API to get the budget and revenue for these 10k entries. From there, we went on to pose 5 questions we set out to answer:
 
@@ -31,7 +31,7 @@ In this project we used the following libraries:
 	Matplotlib
 	Seaborn
 
-##Data Collection
+## Data Collection
 
 	See: Data_Collection.ipynb
 
@@ -41,7 +41,7 @@ With all metrics collected from our sources, we moved the data into a DataFrame 
 
 In the case that any metric was not listed, we made sure to add a null value which would later clean once loaded into the DataFrame.
 
-##Data Cleaning & Visualization
+## Data Cleaning & Visualization
 
 	See: Visualizations.ipynb
 
@@ -66,7 +66,7 @@ Once we had our data cleaned, we started to answer our business questions we set
 	See Figure 6. User Rating vs Runtime
 
 
-##Conclusion
+## Conclusion
 
 Based on our data set, we can expect to spend ~$14m-$17m per project.
 
@@ -77,3 +77,6 @@ While top genres all look to return a profit, Musicals and Music movies return a
 The most revenue generating MPAA rating type is G on average. It returns ~$150m more than a film rated PG and $200m more than an PG. An R-rated film on average returns under $70m.
 
 There looks to be a positive trend between user ratings and runtime. As a film increases in runtime, users rated it more favorably.# mod1project
+
+To view our presentation on this project, please visit the following link.
+https://docs.google.com/presentation/d/1zhudJ7S5P-5WI14h1yTlGHQT6qqLznx3e_NopS0y-4E/edit#slide=id.p
