@@ -68,6 +68,7 @@ Once we had our data cleaned, we started to answer our business questions we set
 
 ## Conclusion
 
+### Recommendations
 Based on our data set, we can expect to spend ~$14m-$17m per project.
 
 We would expect that as our spend increases, our revenue will also increase.
@@ -76,7 +77,13 @@ While top genres all look to return a profit, Musicals and Music movies return a
 
 The most revenue generating MPAA rating type is G on average. It returns ~$150m more than a film rated PG and $200m more than an PG. An R-rated film on average returns under $70m.
 
-There looks to be a positive trend between user ratings and runtime. As a film increases in runtime, users rated it more favorably.# mod1project
+There looks to be a positive trend between user ratings and runtime. As a film increases in runtime, users rated it more favorably.
+
+### Further Analysis
+To continue this project, we suggest:
+* Find target MPAA rating per genre
+* Check which genres are over-saturated
+* Find actors, directors, and screenwriters with a high ROI
 
 To view our presentation on this project, please visit the following link.
 https://docs.google.com/presentation/d/1zhudJ7S5P-5WI14h1yTlGHQT6qqLznx3e_NopS0y-4E/edit#slide=id.p
