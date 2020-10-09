@@ -5,6 +5,7 @@ import configparser
 import json
 import urllib.parse
 import pandas as pd
+import threading
 
 config_file = 'config.py'
 
@@ -52,7 +53,7 @@ def collect_all_results(imdb_search_url, total_results):
         movie_container = find_imdb_movies(url)
         movie_dict = collect_imdb_data(movie_container)
         all_movies.update(movie_dict)
-        time.sleep(0.5)
+        time.sleep(0.1)
     return all_movies
 
 def get_api_key(config_file):
@@ -64,6 +65,7 @@ def get_api_key(config_file):
 def collect_moviedb_data(imdb_movie_id):
     '''Use IMDB movie IDs to search for movies on The Movie DB and update the
     movie dict with revenue and budget data.'''
+    global movies
     api_key = get_api_key(config_file)
     moviedb_search_url = f"https://api.themoviedb.org/3/find/{imdb_movie_id}?api_key={api_key}&language=en-US&external_source=imdb_id"
     moviedb_data = json.load(urllib.request.urlopen(moviedb_search_url))
@@ -76,20 +78,30 @@ def collect_moviedb_data(imdb_movie_id):
     else:
         budget = 'NA'
         revenue = 'NA'
-    time.sleep(0.5)
-    return budget, revenue
+    print(f"Movie {imdb_movie_id} has budget of {movie_data['budget']} and revenue of {movie_data['revenue']}. Movie data: {movie_data}")
+    movies[imdb_movie_id]['budget'], movies[imdb_movie_id]['revenue'] = budget, revenue
+ 
 
 ## main ##
 
 # all feature films of past 10 years
 imdb_search_url = 'https://www.imdb.com/search/title/?title_type=feature&release_date=2010-06-30,2020-06-30'
 
-# get moovie dict
+# get movie dict
 movies = collect_all_results(imdb_search_url, 50)
 
+movie_threads = []
 imdb_movie_ids = list(movies.keys())
 for xid in imdb_movie_ids:
-    movies[xid]['budget'], movies[xid]['revenue'] = collect_moviedb_data(xid)
+    movie_threads.append(
+        threading.Thread(target=collect_moviedb_data, args=(xid,))
+    )
+    movie_threads[-1].start()
+    if len(movie_threads) % 10 == 0:
+        time.sleep(0.1)
+
+for thread in movie_threads:
+    thread.join()
 
 # turn movie dict into dataframe
 movie_df = pd.DataFrame(list(movies.values()))
