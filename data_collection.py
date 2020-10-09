@@ -61,25 +61,23 @@ def get_api_key(config_file):
     config.read(config_file)
     return config['API']['api_key']
 
-def collect_moviedb_data(imdb_movies_dict):
+def collect_moviedb_data(imdb_movie_id):
     '''Use IMDB movie IDs to search for movies on The Movie DB and update the
     movie dict with revenue and budget data.'''
     api_key = get_api_key(config_file)
-    imdb_movie_ids = list(imdb_movies_dict.keys())
-    for xid in imdb_movie_ids:
-        moviedb_search_url = f"https://api.themoviedb.org/3/find/{xid}?api_key={api_key}&language=en-US&external_source=imdb_id"
-        mdb_data = json.load(urllib.request.urlopen(moviedb_search_url))
-        mdb_movie_id = mdb_data['movie_results'][0]['id'] if mdb_data['movie_results'] else None
-        if mdb_movie_id:
-            mdb_details_url = f'https://api.themoviedb.org/3/movie/{mdb_movie_id}?api_key={api_key}&language=en-US'
-            movie_data = json.load(urllib.request.urlopen(mdb_details_url))
-            imdb_movies_dict[xid]['budget'] = movie_data['budget']
-            imdb_movies_dict[xid]['revenue'] = movie_data['revenue']
-        else:
-            imdb_movies_dict[xid]['budget'] = 'NA'
-            imdb_movies_dict[xid]['revenue'] = 'NA'
-        time.sleep(0.5)
-    return imdb_movies_dict
+    moviedb_search_url = f"https://api.themoviedb.org/3/find/{imdb_movie_id}?api_key={api_key}&language=en-US&external_source=imdb_id"
+    moviedb_data = json.load(urllib.request.urlopen(moviedb_search_url))
+    moviedb_movie_id = moviedb_data['movie_results'][0]['id'] if moviedb_data['movie_results'] else None
+    if moviedb_movie_id:
+        mdb_details_url = f'https://api.themoviedb.org/3/movie/{moviedb_movie_id}?api_key={api_key}&language=en-US'
+        movie_data = json.load(urllib.request.urlopen(mdb_details_url))
+        budget = movie_data['budget']
+        revenue = movie_data['revenue']
+    else:
+        budget = 'NA'
+        revenue = 'NA'
+    time.sleep(0.5)
+    return budget, revenue
 
 ## main ##
 
@@ -88,10 +86,13 @@ imdb_search_url = 'https://www.imdb.com/search/title/?title_type=feature&release
 
 # get moovie dict
 movies = collect_all_results(imdb_search_url, 50)
-movies_updated = collect_moviedb_data(movies)
+
+imdb_movie_ids = list(movies.keys())
+for xid in imdb_movie_ids:
+    movies[xid]['budget'], movies[xid]['revenue'] = collect_moviedb_data(xid)
 
 # turn movie dict into dataframe
-movie_df = pd.DataFrame(list(movies_updated.values()))
+movie_df = pd.DataFrame(list(movies.values()))
 
 # store dataframe into pickle
 movie_df.to_pickle("./movie_data.pkl")
