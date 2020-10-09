@@ -88,7 +88,7 @@ def collect_moviedb_data(imdb_movie_id):
 imdb_search_url = 'https://www.imdb.com/search/title/?title_type=feature&release_date=2010-06-30,2020-06-30'
 
 # get movie dict
-movies = collect_all_results(imdb_search_url, 50)
+movies = collect_all_results(imdb_search_url, 10000)
 
 movie_threads = []
 imdb_movie_ids = list(movies.keys())
