@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 import configparser
 import json
 import urllib.parse
+import pandas as pd
+import threading
 
 config_file = 'config.py'
 
@@ -37,7 +39,7 @@ def collect_all_results(imdb_search_url, total_results):
         print('''The amount of results is too large, this function can only
         support up to 10,000. Collecting data for top 10,000 results only.''')
         total_results = 10_001
-    if total_results % 50 != 10:
+    if total_results % 50 != 0:
         print('''IMDB gives us 50 titles per search result pages. 
         As such this function can only support an amount of results divisible by
         50. Collecting first page of data.''')
@@ -51,7 +53,7 @@ def collect_all_results(imdb_search_url, total_results):
         movie_container = find_imdb_movies(url)
         movie_dict = collect_imdb_data(movie_container)
         all_movies.update(movie_dict)
-        time.sleep(0.5)
+        time.sleep(0.1)
     return all_movies
 
 def get_api_key(config_file):
@@ -60,35 +62,53 @@ def get_api_key(config_file):
     config.read(config_file)
     return config['API']['api_key']
 
-def collect_moviedb_data(imdb_movies_dict):
+def collect_moviedb_data(imdb_movie_id):
     '''Use IMDB movie IDs to search for movies on The Movie DB and update the
     movie dict with revenue and budget data.'''
+    global movies
     api_key = get_api_key(config_file)
-    imdb_movie_ids = list(imdb_movies_dict.keys())
-    for xid in imdb_movie_ids:
-        moviedb_search_url = f"https://api.themoviedb.org/3/find/{xid}?api_key={api_key}&language=en-US&external_source=imdb_id"
-        mdb_data = json.load(urllib.request.urlopen(moviedb_search_url))
-        mdb_movie_id = mdb_data['movie_results'][0]['id']
-        if mdb_movie_id:
-            mdb_details_url = f'https://api.themoviedb.org/3/movie/{mdb_movie_id}?api_key={api_key}&language=en-US'
-            movie_data = json.load(urllib.request.urlopen(mdb_details_url))
-            imdb_movies_dict[xid]['budget'] = movie_data['budget']
-            imdb_movies_dict[xid]['revenue'] = movie_data['revenue']
-        else:
-            imdb_movies_dict[xid]['budget'] = 'NA'
-            imdb_movies_dict[xid]['revenue'] = 'NA'
-        time.sleep(0.5)
-    return imdb_movies_dict
+    moviedb_search_url = f"https://api.themoviedb.org/3/find/{imdb_movie_id}?api_key={api_key}&language=en-US&external_source=imdb_id"
+    moviedb_data = json.load(urllib.request.urlopen(moviedb_search_url))
+    moviedb_movie_id = moviedb_data['movie_results'][0]['id'] if moviedb_data['movie_results'] else None
+    if moviedb_movie_id:
+        mdb_details_url = f'https://api.themoviedb.org/3/movie/{moviedb_movie_id}?api_key={api_key}&language=en-US'
+        movie_data = json.load(urllib.request.urlopen(mdb_details_url))
+        budget = movie_data['budget']
+        revenue = movie_data['revenue']
+    else:
+        budget = 'NA'
+        revenue = 'NA'
+    print(f"Movie {imdb_movie_id} has budget of {movie_data['budget']} and revenue of {movie_data['revenue']}. Movie data: {movie_data}")
+    movies[imdb_movie_id]['budget'], movies[imdb_movie_id]['revenue'] = budget, revenue
+ 
 
 ## main ##
 
 # all feature films of past 10 years
 imdb_search_url = 'https://www.imdb.com/search/title/?title_type=feature&release_date=2010-06-30,2020-06-30'
 
-movies = collect_all_results(imdb_search_url, 10)
-movies_updated = collect_moviedb_data(movies)
+# get movie dict
+movies = collect_all_results(imdb_search_url, 10000)
 
-count = 1
-for movie in movies_updated.items():
-    print(f'{count}. {movie[0]}, {movie[1]}')
-    count += 1
+movie_threads = []
+imdb_movie_ids = list(movies.keys())
+for xid in imdb_movie_ids:
+    movie_threads.append(
+        threading.Thread(target=collect_moviedb_data, args=(xid,))
+    )
+    movie_threads[-1].start()
+    if len(movie_threads) % 10 == 0:
+        time.sleep(0.1)
+
+for thread in movie_threads:
+    thread.join()
+
+# turn movie dict into dataframe
+movie_df = pd.DataFrame(list(movies.values()))
+
+# store dataframe into pickle
+movie_df.to_pickle("./movie_data.pkl")
+
+## testing for 400 code ##
+# moviedb_search_url = 'https://api.themoviedb.org/3/find/123?api_key=19ad5c6f0c75547d77ec237563fb0d7e&language=en-US&external_source=imdb_id'
+# mdb_data = json.load(urllib.request.urlopen(moviedb_search_url))

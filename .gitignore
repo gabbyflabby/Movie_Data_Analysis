@@ -1,6 +1,12 @@
 # Config file
 config.py
 
+#Testing files
+test.*
+
+# Data files
+*.pkl
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
