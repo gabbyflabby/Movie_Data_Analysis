@@ -1,6 +1,7 @@
 import requests
 import time
 from bs4 import BeautifulSoup
+import numpy as np
 import configparser
 import json
 import urllib.parse
@@ -25,10 +26,10 @@ def collect_imdb_data(movie_container):
         imdb_id = movie.find('a').attrs['href'].replace('title', '').strip('/')
         movie_dict[imdb_id] = {
             'title': movie.find('a').get_text() if movie.find('a') else 'NA',
-            'mpaa_rating': movie.find('span', class_='certificate').get_text() if movie.find('span', class_='certificate') else 'NA',
-            'runtime': movie.find('span', class_='runtime').get_text() if movie.find('span', class_='runtime') else 'NA',
-            'genre': movie.find('span', class_='genre').get_text() if movie.find('span', class_='genre') else 'NA',
-            'star_rating': movie.find('strong').get_text() if movie.find('strong') else 'NA',
+            'mpaa_rating': movie.find('span', class_='certificate').get_text() if movie.find('span', class_='certificate') else np.nan,
+            'runtime': movie.find('span', class_='runtime').get_text() if movie.find('span', class_='runtime') else np.nan,
+            'genre': movie.find('span', class_='genre').get_text() if movie.find('span', class_='genre') else np.nan,
+            'star_rating': movie.find('strong').get_text() if movie.find('strong') else np.nan,
         }
     return movie_dict
 
@@ -76,9 +77,8 @@ def collect_moviedb_data(imdb_movie_id):
         budget = movie_data['budget']
         revenue = movie_data['revenue']
     else:
-        budget = 'NA'
-        revenue = 'NA'
-    print(f"Movie {imdb_movie_id} has budget of {movie_data['budget']} and revenue of {movie_data['revenue']}. Movie data: {movie_data}")
+        budget = np.nan
+        revenue = np.nan
     movies[imdb_movie_id]['budget'], movies[imdb_movie_id]['revenue'] = budget, revenue
  
 
@@ -88,7 +88,7 @@ def collect_moviedb_data(imdb_movie_id):
 imdb_search_url = 'https://www.imdb.com/search/title/?title_type=feature&release_date=2010-06-30,2020-06-30'
 
 # get movie dict
-movies = collect_all_results(imdb_search_url, 10000)
+movies = collect_all_results(imdb_search_url, 10_000)
 
 movie_threads = []
 imdb_movie_ids = list(movies.keys())
@@ -108,7 +108,3 @@ movie_df = pd.DataFrame(list(movies.values()))
 
 # store dataframe into pickle
 movie_df.to_pickle("./movie_data.pkl")
-
-## testing for 400 code ##
-# moviedb_search_url = 'https://api.themoviedb.org/3/find/123?api_key=19ad5c6f0c75547d77ec237563fb0d7e&language=en-US&external_source=imdb_id'
-# mdb_data = json.load(urllib.request.urlopen(moviedb_search_url))
