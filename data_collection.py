@@ -78,7 +78,7 @@ def collect_imdb_budget(imdb_movie_id):
 def collect_moviedb_data(imdb_movie_id):
     '''Use IMDB movie IDs to search for movies on The Movie DB and update the
     movie dict with revenue and budget data.'''
-    global movies
+    global movies, wrong_movies
     api_key = get_api_key(config_file)
     moviedb_search_url = f"https://api.themoviedb.org/3/find/{imdb_movie_id}?api_key={api_key}&language=en-US&external_source=imdb_id"
     moviedb_data = json.load(urllib.request.urlopen(moviedb_search_url))
@@ -89,13 +89,11 @@ def collect_moviedb_data(imdb_movie_id):
         budget = movie_data['budget']
         revenue = movie_data['revenue']
         true_budget, true_revenue = collect_imdb_budget(imdb_movie_id)
-        if budget != true_budget:
-            print('This budget was wrong')
-            print(f'TMDB: {budget}, IMDB: {true_budget}')
+        if budget != true_budget or revenue != true_revenue:
+            wrong_movies.append(imdb_movie_id)
+            print('This finance information was wrong')
+            print(f'TMDB: budget {budget} revenue {revenye}, IMDB: budget {true_budget} revenue {true_revenue}')
             budget = true_budget
-        if revenue != true_revenue:
-            print('This revenue was wrong')
-            print(f'TMDB: {revenue}, IMDB: {true_revenue}')
             revenue = true_revenue
     else:
         budget = np.nan
@@ -111,6 +109,8 @@ imdb_search_url = 'https://www.imdb.com/search/title/?title_type=feature&release
 
 # get movie dict
 movies = collect_all_results(imdb_search_url, 10_000)
+
+wrong_movies = []
 
 movie_threads = []
 imdb_movie_ids = list(movies.keys())
