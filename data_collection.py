@@ -63,6 +63,18 @@ def get_api_key(config_file):
     config.read(config_file)
     return config['API']['api_key']
 
+def collect_imdb_budget(imdb_movie_id):
+    '''Collect budget and revenue information from IMDB movie page.'''
+    url = f'https://www.imdb.com/title/{imdb_movie_id}/'
+    html_page = requests.get(url)
+    html_tree = BeautifulSoup(html_page.content, 'html.parser')
+    detail_container = html_tree.find('div', id='titleDetails')
+    budget = detail_container.find_all('span', class_='rightcornerlink')[1].find_next('div').find('h4').next_sibling
+    revenue = budget.find_next('div').find('h4').next_sibling
+    budget = int(budget.replace(',','').strip().strip('$'))
+    revenue = int(revenue.replace(',','').strip().strip('$'))
+    return budget, revenue
+
 def collect_moviedb_data(imdb_movie_id):
     '''Use IMDB movie IDs to search for movies on The Movie DB and update the
     movie dict with revenue and budget data.'''
@@ -76,11 +88,21 @@ def collect_moviedb_data(imdb_movie_id):
         movie_data = json.load(urllib.request.urlopen(mdb_details_url))
         budget = movie_data['budget']
         revenue = movie_data['revenue']
+        true_budget, true_revenue = collect_imdb_budget(imdb_movie_id)
+        if budget != true_budget:
+            print('This budget was wrong')
+            print(f'TMDB: {budget}, IMDB: {true_budget}')
+            budget = true_budget
+        if revenue != true_revenue:
+            print('This revenue was wrong')
+            print(f'TMDB: {revenue}, IMDB: {true_revenue}')
+            revenue = true_revenue
     else:
         budget = np.nan
         revenue = np.nan
     movies[imdb_movie_id]['budget'], movies[imdb_movie_id]['revenue'] = budget, revenue
- 
+
+ #TODO: keep list of movies which need manual correction on TMDB
 
 ## main ##
 
